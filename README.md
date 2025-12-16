@@ -2,6 +2,170 @@
 PHP 近期版本的新特性汇总
 
 
+## PHP 8.5
+
+
+### **New Features**
+```php
+<?php
+/*
+* Pipe Operator / 管道操作符
+* 从左到右链式调用可调用项, 使数在多个函数间顺畅传递, 无需中间变量
+*/
+$result = "Hello World"
+    |> 'strtolower'
+    |> 'str_split'
+    |> fn($x) => array_map('strtoupper', $x)
+    |> fn($x) => array_filter($x, fn($v) => $v !== 'O');
+
+/*
+* Clone With / 克隆并更新属性
+* 在克隆对象的同时更新属性, 简化了 readonly 类的 "with-er" 模式
+*/
+readonly class Point
+{
+    public function __construct(
+        public int $x,
+        public int $y,
+    ) {}
+}
+
+$point = new Point(x: 1, y: 2);
+$newPoint = clone($point) with {
+    x: 5,
+};
+// $newPoint->x === 5, $newPoint->y === 2
+
+/*
+* #[\NoDiscard] 属性
+* 当函数/方法的返回值未被使用时发出警告, 避免错误, 提高 API 的安全性
+*/
+#[\NoDiscard]
+function calculateImportantValue(): int
+{
+    return 42;
+}
+
+calculateImportantValue(); // Warning: Return value of calculateImportantValue() must be used
+
+/*
+* 常量表达式中的闭包和 First-class 可调用
+* 静态闭包和 First-class 可调用现在可以用于常量表达式, 例如属性参数
+*/
+#[Attribute]
+class MyAttribute
+{
+    public function __construct(
+        public Closure $callback = static fn() => 'default',
+    ) {}
+}
+
+/*
+* URI 扩展
+* 新增内置的 URI 扩展, 支持按照 RFC 3986 和 WHATWG URL 标准解析、规范化和处理 URL
+*/
+$uri = Uri\Url::fromString('https://example.com/path?query=value#fragment');
+echo $uri->getHost(); // example.com
+echo $uri->getPath(); // /path
+
+/*
+* 持久化 cURL Share 句柄
+* 句柄现在可以在多个 PHP 请求之间保持, 避免重复初始化到同一主机的连接
+*/
+```
+
+### New Functions
+```php
+<?php
+
+// 返回数组的第一个值, 若数组为空则返回 null (方便与 ?? 操作符组合)
+array_first()
+
+// 返回数组的最后一个值, 若数组为空则返回 null (方便与 ?? 操作符组合)
+array_last()
+
+$array = [1, 2, 3, 4];
+$first = array_first($array); // 1
+$last = array_last($array); // 4
+
+$empty = [];
+$value = array_first($empty) ?? 'default'; // 'default'
+```
+
+### 弃用
+
+```php
+<?php
+/*
+* 弃用 switch 语句中 case 后的分号
+* 建议使用冒号
+*/
+// Deprecated
+switch ($x) {
+    case 1;
+        break;
+}
+// Recommended
+switch ($x) {
+    case 1:
+        break;
+}
+
+/*
+* 弃用反引号作为 shell_exec 的别名
+* 建议使用 shell_exec() 函数
+*/
+// Deprecated
+`ls -la`;
+// Recommended
+shell_exec('ls -la');
+
+/*
+* 弃用 __sleep() 和 __wakeup() 魔术方法
+* 建议使用 __serialize() 和 __unserialize() 方法
+*/
+
+/*
+* 弃用非标准强制转换名称
+* (boolean)、(integer)、(double) 和 (binary) 已弃用
+* 建议使用 (bool)、(int)、(float) 和 (string)
+*/
+// Deprecated
+$value = (boolean) $var;
+$num = (integer) $str;
+$float = (double) $val;
+$binary = (binary) $data;
+
+// Recommended
+$value = (bool) $var;
+$num = (int) $str;
+$float = (float) $val;
+$binary = (string) $data;
+
+/*
+* disable_classes INI 选项已被移除
+* 该选项会破坏引擎的一些基本假设
+*/
+
+/*
+* class_alias() 中不再允许将 "array" 和 "callable" 用作类别名
+*/
+// No longer allowed
+class_alias(MyClass::class, 'array'); // Error
+class_alias(MyClass::class, 'callable'); // Error
+
+/*
+* 弃用将 null 作为数组偏移量
+* 弃用 __debugInfo() 返回 null
+* 弃用常量重定义
+* 弃用 Reflection*::setAccessible()
+* 弃用 curl_close() / imagedestroy() / finfo_close() / xml_parser_free()
+* 弃用 mysqli_execute()
+* 弃用 $http_response_header 预定义变量
+*/
+```
+
+
 ## PHP 8.4
 
 
